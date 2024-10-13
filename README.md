@@ -7,7 +7,8 @@ The **MonadCount Sniffer** is an ESP32-based application designed to capture Wi-
 operates in two main phases:
 
 1. **Management Phase**: Connects to a specified Wi-Fi network to synchronize time using SNTP.
-2. **Sniffer Phase**: Initializes Wi-Fi in promiscuous mode to capture packets and CSI data, writes the data to the SD card, and starts BLE advertising.
+2. **Sniffer Phase**: Initializes Wi-Fi in promiscuous mode to capture packets and CSI data, writes the data to the SD 
+card, and starts BLE advertising.
 
 
 ## Components
@@ -15,7 +16,8 @@ operates in two main phases:
 ### 1. **`main` Application**
 
 - **File**: `main.c`
-- **Description**: Entry point of the application. Initializes shared resources, NVS, Bluetooth, and manages the transition between the management and sniffer phases.
+- **Description**: Entry point of the application. Initializes shared resources, NVS, Bluetooth, and manages the 
+transition between the management and sniffer phases.
 
 ### 2. **`bluetooth` Component**
 
@@ -34,7 +36,8 @@ operates in two main phases:
 
 - **Purpose**: Captures Wi-Fi packets and CSI data, writes data to the SD card, and manages channel hopping.
 - **Files**:
-    - `sniffer.c`: Contains functions for Wi-Fi initialization in promiscuous mode, packet and CSI data callbacks, SD card writing tasks, and channel hopping.
+    - `sniffer.c`: Contains functions for Wi-Fi initialization in promiscuous mode, packet and CSI data callbacks,
+    SD card writing tasks, and channel hopping.
     - `include/sniffer.h`: Header file with function declarations and data structures.
 - **Key Functions**:
     - `sniffer_wifi_init()`: Initializes Wi-Fi for packet and CSI capturing.
@@ -49,7 +52,8 @@ operates in two main phases:
 
 - **Purpose**: Manages Wi-Fi connectivity for time synchronization during the management phase.
 - **Files**:
-    - `management.c`: Contains functions to initialize Wi-Fi in station mode, connect to an access point, synchronize time using SNTP, and deinitialize Wi-Fi after synchronization.
+    - `management.c`: Contains functions to initialize Wi-Fi in station mode, connect to an access point,
+    synchronize time using SNTP, and deinitialize Wi-Fi after synchronization.
     - `include/management.h`: Header file with function declarations.
 - **Key Functions**:
     - `management_wifi_init()`: Initializes Wi-Fi for the management phase.
@@ -132,6 +136,3 @@ operates in two main phases:
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
----
-
