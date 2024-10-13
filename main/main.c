@@ -1,0 +1,67 @@
+#include <stdio.h>
+#include <inttypes.h>
+#include "sdkconfig.h"
+#include "freertos/FreeRTOS.h"
+#include "esp_log.h"
+#include "shared.h"
+#include "bluetooth.h"
+#include "nvs_flash.h"
+#include "sniffer.h"
+#include "management.h"
+
+static const char* TAG = "MAIN_MODULE";
+
+void app_main(void)
+{
+    int rc;
+
+    ESP_LOGI(TAG, "Booting monadcount-sniffer");
+
+    // Initialize the mutex
+    data_mutex = xSemaphoreCreateMutex();
+    if (data_mutex == NULL) {
+        ESP_LOGE(TAG, "Unable to initialize shared memory mutex");
+    }
+
+    // Initialize NVS
+    rc = nvs_flash_init();
+    if (rc != ESP_OK && rc != ESP_ERR_NVS_NO_FREE_PAGES && rc != ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(rc);
+    }
+
+    // Initialize Wi-Fi
+//    wifi_init();
+
+    // Initialize Sniffer
+//    wifi_sniffer_init();
+
+    // Initialize the NimBLE host
+    nimble_port_init();
+
+    // Configure the host stack
+    ble_hs_cfg.sync_cb = bleprph_on_sync;
+    ble_hs_cfg.reset_cb = bleprph_on_reset;
+
+    ESP_LOGD(TAG, "Look for monads initialized. Pinning tasks to core.");
+    // Start the NimBLE host task
+    nimble_port_freertos_init(bleprph_host_task);
+
+    // Management Phase: Connect to Wi-Fi and synchronize time
+    ESP_LOGI(TAG, "Starting Management Phase");
+    management_wifi_init();
+
+    if (!management_obtain_time()) {
+        esp_restart();
+    }
+
+    management_wifi_deinit();
+
+    ESP_LOGI(TAG, "Starting Sniffer Phase");
+
+    sniffer_wifi_init();
+
+    xTaskCreate(&channel_hop_task, "channel_hop_task", 2048, NULL, 5, NULL);
+
+    ESP_LOGD(TAG, "All tasks are pinned!");
+    vTaskSuspend(NULL);
+}

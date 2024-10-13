@@ -1,0 +1,15 @@
+menu "Bluetooth Configuration"
+    config BLUETOOTH_ADVERTISEMENT_MIN
+        hex "Minimum advertising interval"
+        default 0x3000
+        range 0x0020 0x4000
+        help
+            "Time = N * 0.625 msec. Time Range: 20 ms to 10.24 sec"
+
+    config BLUETOOTH_ADVERTISEMENT_MAX
+        hex "Maximum advertising interval"
+        default 0x4000
+        range 0x0020 0x4000
+        help
+            "Time = N * 0.625 msec. Time Range: 20 ms to 10.24 sec"
+endmenu
