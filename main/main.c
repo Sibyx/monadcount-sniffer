@@ -29,12 +29,6 @@ void app_main(void)
         ESP_ERROR_CHECK(rc);
     }
 
-    // Initialize Wi-Fi
-//    wifi_init();
-
-    // Initialize Sniffer
-//    wifi_sniffer_init();
-
     // Initialize the NimBLE host
     nimble_port_init();
 
@@ -58,10 +52,9 @@ void app_main(void)
 
     ESP_LOGI(TAG, "Starting Sniffer Phase");
 
-    sniffer_wifi_init();
+    // Initialize Sniffer
+    sniffer_init();
 
-    xTaskCreate(&channel_hop_task, "channel_hop_task", 2048, NULL, 5, NULL);
-
-    ESP_LOGD(TAG, "All tasks are pinned!");
+    // Suspend the main task
     vTaskSuspend(NULL);
 }
