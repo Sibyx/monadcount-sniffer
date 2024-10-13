@@ -108,55 +108,26 @@ operates in two main phases:
 
 ## Configuration Details
 
-- **Wi-Fi Settings**:
+**Wi-Fi Settings**:
+
 - Wi-Fi SSID and password are configured in `menuconfig`.
 - Wi-Fi operates in station mode during the management phase and in promiscuous mode during the sniffer phase.
 
-- **SD Card Configuration**:
+**SD Card Configuration**:
+ 
 - The SD card is connected via SPI interface.
 - SPI pins (MISO, MOSI, CLK, CS) are defined in `sniffer.c`.
 - The SD card is mounted at `/sdcard`.
 
-- **BLE Advertisement**:
+**BLE Advertisement**:
+
 - BLE uses NimBLE stack for low memory footprint.
 - The device advertises with the name "MONAD".
 - BLE advertisement data can be customized in `bluetooth.c`.
 
-- **Channel Hopping**:
+**Channel Hopping**:
 - The application hops through Wi-Fi channels 1 to 13.
 - The channel switch interval is defined by `WIFI_CHANNEL_SWITCH_INTERVAL_MS`.
-
-## Notes and Considerations
-
-- **IRAM Usage**:
-- The application may encounter IRAM overflow issues due to the combined size of the Wi-Fi and BLE stacks.
-- Optimizations may be required, such as disabling unused features or adjusting configurations.
-
-- **Thread Safety**:
-- Mutexes are used to protect shared resources.
-- Callbacks are designed to be minimal to prevent blocking.
-
-- **Data Integrity**:
-- The writer tasks periodically flush and close the files to ensure data integrity.
-- This helps prevent data loss in case of power failure.
-
-- **Future Refactoring**:
-- Plans to separate CSI and packet capturing into separate modules for easier management.
-- Potential to disable features dynamically to address memory constraints.
-
-## Troubleshooting
-
-- **Build Errors**:
-- Ensure all components are included correctly in `CMakeLists.txt`.
-- Verify that the ESP-IDF version is compatible.
-
-- **IRAM Overflow**:
-- Try disabling features like CSI capturing or BLE advertisements to reduce IRAM usage.
-- Adjust compiler optimization settings in `menuconfig`.
-
-- **SD Card Issues**:
-- Check the SPI connections and pin configurations.
-- Ensure the SD card is formatted correctly.
 
 ## License
 
