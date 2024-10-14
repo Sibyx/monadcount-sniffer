@@ -3,16 +3,15 @@
 #include <time.h>
 #include <esp_netif_sntp.h>
 #include "esp_wifi.h"
+#include "esp_eap_client.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "freertos/event_groups.h"
 #include "freertos/FreeRTOS.h"
 
-#define WIFI_SSID      "Kapucinska 1 5 9"
-#define WIFI_PASS      "smecarovni"
 #define MAX_RETRY      5
 
-static const char *TAG = "management_wifi";
+static const char *TAG = "MANAGEMENT";
 
 static EventGroupHandle_t s_wifi_event_group;
 
@@ -62,18 +61,25 @@ void management_wifi_init(void)
                                                         &instance_ip_event)); // Store instance
 
     // Set Wi-Fi configuration
-    wifi_config_t wifi_config = {
-            .sta = {
-                    .ssid = WIFI_SSID,
-                    .password = WIFI_PASS,
-                    // Additional parameters if needed
-                    .threshold.authmode = WIFI_AUTH_WPA2_PSK,
-                    .pmf_cfg = {
-                            .capable = true,
-                            .required = false
-                    },
-            },
-    };
+    // Configure Wi-Fi connection
+    wifi_config_t wifi_config = { 0 };
+
+    // Set Wi-Fi SSID
+    strncpy((char*)wifi_config.sta.ssid, CONFIG_MANAGEMENT_WIFI_SSID, sizeof(wifi_config.sta.ssid));
+    wifi_config.sta.ssid[sizeof(wifi_config.sta.ssid) - 1] = '\0';
+
+    // Set authentication mode to WPA2 Enterprise
+    wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_ENTERPRISE;
+
+    // Set Wi-Fi mode and configuration
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+
+    ESP_ERROR_CHECK(esp_eap_client_set_username((uint8_t *)CONFIG_MANAGEMENT_WIFI_USERNAME, strlen(CONFIG_MANAGEMENT_WIFI_USERNAME)) );
+    ESP_ERROR_CHECK(esp_eap_client_set_password((uint8_t *)CONFIG_MANAGEMENT_WIFI_PASSWORD, strlen(CONFIG_MANAGEMENT_WIFI_PASSWORD)) );
+
+    // Initialize WPA2 Enterprise client
+    ESP_ERROR_CHECK(esp_wifi_sta_enterprise_enable());
 
     // Avoid storing Wi-Fi credentials in NVS
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
@@ -93,9 +99,9 @@ void management_wifi_init(void)
 
     // Check connection result
     if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(TAG, "Connected to SSID:%s", WIFI_SSID);
+        ESP_LOGI(TAG, "Connected to SSID:%s", CONFIG_MANAGEMENT_WIFI_SSID);
     } else if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGE(TAG, "Failed to connect to SSID:%s", WIFI_SSID);
+        ESP_LOGE(TAG, "Failed to connect to SSID:%s", CONFIG_MANAGEMENT_WIFI_SSID);
     } else {
         ESP_LOGE(TAG, "Unexpected event");
     }

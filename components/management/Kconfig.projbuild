@@ -1,3 +1,13 @@
-menu "Sniffer Configuration"
+menu "Management Configuration"
+    config MANAGEMENT_WIFI_SSID
+        string "Management: WiFi SSID"
+        default "MonadCountManagement"
 
+    config MANAGEMENT_WIFI_USERNAME
+        string "Management: WiFi Password"
+        default "arthut.dent@example.sk"
+
+    config MANAGEMENT_WIFI_PASSWORD
+        string "Management: WiFi Password"
+        default "DontPanic!42"
 endmenu
