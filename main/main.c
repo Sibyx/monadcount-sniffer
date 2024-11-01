@@ -32,7 +32,7 @@ void app_main(void)
 
     ESP_LOGD(TAG, "Look for monads initialized. Pinning tasks to core.");
     // Start the NimBLE host task
-//    nimble_port_freertos_init(bleprph_host_task);
+    nimble_port_freertos_init(bleprph_host_task);
 
     // Management Phase: Connect to Wi-Fi and synchronize time
     ESP_LOGI(TAG, "Starting Management Phase");
