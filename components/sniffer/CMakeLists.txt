@@ -1,5 +1,5 @@
 idf_component_register(
-        SRCS "sniffer.c" "csi_sniffer.c" "l2_sniffer.c"
+        SRCS "sniffer.c" "csi_sniffer.c" "l2_sniffer.c" "sdcard_writer.c"
         INCLUDE_DIRS "include"
-        REQUIRES bt shared nvs_flash esp_timer sdmmc fatfs
+        REQUIRES shared nvs_flash esp_timer sdmmc fatfs esp_wifi
 )

@@ -1,3 +1,25 @@
 menu "Sniffer Configuration"
+    config SNIFFER_SDCARD_MISO
+        int "SD Card MISO GPIO"
+        default 12
 
+    config SNIFFER_SDCARD_MOSI
+        int "SD Card MOSI GPIO"
+        default 13
+
+    config SNIFFER_SDCARD_CLK
+        int "SD Card CLK GPIO"
+        default 18
+
+    config SNIFFER_SDCARD_CS
+        int "SD Card CS GPIO"
+        default 5
+
+   config SNIFFER_PACKET_QUEUE_SIZE
+        int "L2 Packet Queue Size"
+        default 100
+
+   config SNIFFER_CSI_QUEUE_SIZE
+        int "CSI Queue Size"
+        default 100
 endmenu

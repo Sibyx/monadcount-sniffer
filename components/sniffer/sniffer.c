@@ -4,6 +4,7 @@
 #include "freertos/task.h"
 #include "l2_sniffer.h"
 #include "csi_sniffer.h"
+#include "sdcard_writer.h"
 
 static const char* TAG = "SNIFFER";
 
@@ -19,6 +20,12 @@ void sniffer_init(void) {
 
     // Set Wi-Fi channel to 1 initially
     ESP_ERROR_CHECK(esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE));
+
+    // Initialize SD card writer
+    if (!sdcard_writer_init()) {
+        ESP_LOGE(TAG, "Failed to initialize SD card writer");
+        return;
+    }
 
     // Initialize L2 sniffer
     l2_sniffer_init();
@@ -40,6 +47,9 @@ void sniffer_deinit(void) {
 
     // Deinitialize L2 sniffer
     l2_sniffer_deinit();
+
+    // Deinitialize SD card writer
+    sdcard_writer_deinit();
 
     // Stop Wi-Fi
     ESP_ERROR_CHECK(esp_wifi_stop());

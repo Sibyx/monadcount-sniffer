@@ -4,19 +4,45 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 
-typedef struct {
-    float temperature; // Start byte: 0
-    float humidity;  // Start byte: 4
-    float pressure;  // Start byte: 8
-    uint16_t moisture;  // Start byte: 12
-    uint16_t moisture_analog;  // Start byte: 14
-    uint16_t lux;  // Start byte: 16
-    uint16_t nitrogen;  // Start byte: 18
-    uint16_t phosphorous;  // Start byte: 20
-    uint16_t potassium;  // Start byte: 22
-} shared_data_t;
+#define CSI_DATA_LEN 128 // Adjust based on your needs
 
-extern shared_data_t shared_data;
-extern SemaphoreHandle_t data_mutex;
+// Packet data structure
+typedef struct {
+    int64_t timestamp;
+    uint8_t src_mac[6];
+    uint8_t dst_mac[6];
+    int8_t rssi;
+    uint8_t channel;
+    uint16_t payload_len;
+    uint8_t payload[256]; // Adjust size as needed
+} captured_packet_t;
+
+// CSI packet data structure
+typedef struct {
+    int64_t timestamp;
+    uint8_t mac[6];
+    int8_t rssi;
+    uint8_t channel;
+    uint16_t csi_len;
+    uint8_t csi_data[CSI_DATA_LEN];
+} csi_packet_t;
+
+// File header for L2 capture file
+typedef struct {
+    char identifier[4]; // e.g., "L2PK"
+    uint32_t version;   // e.g., 1
+    uint64_t start_time; // Unix timestamp when capture started
+} l2_file_header_t;
+
+// File header for CSI capture file
+typedef struct {
+    char identifier[4]; // e.g., "CSIP"
+    uint32_t version;   // e.g., 1
+    uint64_t start_time; // Unix timestamp when capture started
+} csi_file_header_t;
+
+// Queue handles for L2 and CSI data
+extern QueueHandle_t l2_packet_queue;
+extern QueueHandle_t csi_packet_queue;
 
 #endif // SHARED_H

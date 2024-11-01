@@ -2,8 +2,7 @@
 #include <string.h>
 #include "shared.h"
 
-static const char* TAG = "SHARED";
-
-shared_data_t shared_data;
-SemaphoreHandle_t data_mutex;
+// Queue handles declared in header
+QueueHandle_t l2_packet_queue = NULL;
+QueueHandle_t csi_packet_queue = NULL;
 

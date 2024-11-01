@@ -17,12 +17,6 @@ void app_main(void)
 
     ESP_LOGI(TAG, "Booting monadcount-sniffer");
 
-    // Initialize the mutex
-    data_mutex = xSemaphoreCreateMutex();
-    if (data_mutex == NULL) {
-        ESP_LOGE(TAG, "Unable to initialize shared memory mutex");
-    }
-
     // Initialize NVS
     rc = nvs_flash_init();
     if (rc != ESP_OK && rc != ESP_ERR_NVS_NO_FREE_PAGES && rc != ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -38,7 +32,7 @@ void app_main(void)
 
     ESP_LOGD(TAG, "Look for monads initialized. Pinning tasks to core.");
     // Start the NimBLE host task
-    nimble_port_freertos_init(bleprph_host_task);
+//    nimble_port_freertos_init(bleprph_host_task);
 
     // Management Phase: Connect to Wi-Fi and synchronize time
     ESP_LOGI(TAG, "Starting Management Phase");
