@@ -31,7 +31,6 @@ static void fsync_timer_callback(TimerHandle_t xTimer) {
     int fd = (int) pvTimerGetTimerID(xTimer);
     if (fd >= 0) {
         fsync(fd);
-        ESP_LOGI(TAG, "fsync called on fd %d to ensure data is committed to SD card", fd);
     }
 }
 
@@ -140,13 +139,42 @@ void sdcard_writer_deinit(void)
 // L2 writer task
 static void l2_writer_task(void *pvParameter)
 {
-    FILE *file = fopen("/sdcard/l2.bin", "ab");
-    int fd = fileno(file);
-    if (file == NULL) {
-        ESP_LOGE(TAG, "Failed to open L2 capture file: %s", strerror(errno));
-        vTaskDelete(NULL);
-        return;
+    const char *filename = "/sdcard/l2.bin";
+    struct stat st;
+    FILE *file;
+
+    if (stat(filename, &st) == 0) {
+        // File exists, open in append mode
+        file = fopen(filename, "ab");
+        if (file == NULL) {
+            ESP_LOGE(TAG, "Failed to open L2 capture file: %s", strerror(errno));
+            vTaskDelete(NULL);
+            return;
+        }
     }
+    else {
+        // File does not exist, open in write mode and write header
+        file = fopen(filename, "wb");
+        if (file == NULL) {
+            ESP_LOGE(TAG, "Failed to open L2 capture file: %s", strerror(errno));
+            vTaskDelete(NULL);
+            return;
+        }
+
+        // Prepare and write the file header
+        file_header_t header;
+        memcpy(header.identifier, "L2PK", 4);
+        header.version = 1;
+        header.start_time = time(NULL);
+        memcpy(header.wifi_mac, wifi_mac, 6);
+        memcpy(header.bt_mac, bt_mac, 6);
+
+        fwrite(&header, sizeof(header), 1, file);
+        fflush(file);
+    }
+
+
+    int fd = fileno(file);
 
     // Create a timer to periodically call fsync on the file descriptor
     TimerHandle_t fsync_timer = xTimerCreate(
@@ -175,13 +203,40 @@ static void l2_writer_task(void *pvParameter)
 // CSI writer task
 static void csi_writer_task(void *pvParameter)
 {
-    FILE *file = fopen("/sdcard/csi.bin", "ab");
-    int fd = fileno(file);
-    if (file == NULL) {
-        ESP_LOGE(TAG, "Failed to open CSI capture file: %s", strerror(errno));
-        vTaskDelete(NULL);
-        return;
+    const char *filename = "/sdcard/csi.bin";
+    struct stat st;
+    FILE *file;
+
+    if (stat(filename, &st) == 0) {
+        // File exists, open in append mode
+        file = fopen(filename, "ab");
+        if (file == NULL) {
+            ESP_LOGE(TAG, "Failed to open CSI capture file: %s", strerror(errno));
+            vTaskDelete(NULL);
+            return;
+        }
+    } else {
+        // File does not exist, open in write mode and write header
+        file = fopen(filename, "wb");
+        if (file == NULL) {
+            ESP_LOGE(TAG, "Failed to open CSI capture file: %s", strerror(errno));
+            vTaskDelete(NULL);
+            return;
+        }
+
+        // Prepare and write the file header
+        file_header_t header;
+        memcpy(header.identifier, "CSIP", 4);
+        header.version = 1;
+        header.start_time = time(NULL);
+        memcpy(header.wifi_mac, wifi_mac, 6);
+        memcpy(header.bt_mac, bt_mac, 6);
+
+        fwrite(&header, sizeof(header), 1, file);
+        fflush(file);
     }
+
+    int fd = fileno(file);
 
     // Create a timer to periodically call fsync on the file descriptor
     TimerHandle_t fsync_timer = xTimerCreate(
