@@ -2,6 +2,7 @@
 #include <string.h>
 #include <time.h>
 #include <esp_netif_sntp.h>
+#include <esp_mac.h>
 #include "esp_wifi.h"
 #include "esp_eap_client.h"
 #include "esp_event.h"
@@ -163,6 +164,33 @@ bool management_obtain_time(void)
     esp_netif_sntp_deinit();
 
     return false;
+}
+
+bool management_obtain_mac_addresses(void) {
+    int rc;
+
+    rc = esp_wifi_get_mac(WIFI_IF_STA, wifi_mac);
+    if (rc == ESP_OK) {
+        ESP_LOGI(TAG, "Wi-Fi MAC address: %02X:%02X:%02X:%02X:%02X:%02X",
+                 wifi_mac[0], wifi_mac[1], wifi_mac[2],
+                 wifi_mac[3], wifi_mac[4], wifi_mac[5]);
+    } else {
+        ESP_LOGE(TAG, "Failed to get Wi-Fi MAC address: %s", esp_err_to_name(rc));
+        return false;
+    }
+
+    // Obtain Bluetooth MAC address
+    rc = esp_read_mac(bt_mac, ESP_MAC_BT);
+    if (rc == ESP_OK) {
+        ESP_LOGI(TAG, "Bluetooth MAC address: %02X:%02X:%02X:%02X:%02X:%02X",
+                 bt_mac[0], bt_mac[1], bt_mac[2],
+                 bt_mac[3], bt_mac[4], bt_mac[5]);
+    } else {
+        ESP_LOGE(TAG, "Failed to get Bluetooth MAC address: %s", esp_err_to_name(rc));
+        return false;
+    }
+
+    return true;
 }
 
 // Wi-Fi event handler for management phase

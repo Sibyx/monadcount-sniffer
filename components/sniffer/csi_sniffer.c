@@ -1,5 +1,6 @@
 #include <esp_timer.h>
 #include <string.h>
+#include <sys/time.h>
 #include "csi_sniffer.h"
 #include "esp_wifi.h"
 #include "esp_log.h"
@@ -51,7 +52,11 @@ static void wifi_csi_rx_cb(void *ctx, wifi_csi_info_t *csi_info) {
     csi_packet_t csi_packet;
 
     // Get timestamp
-    csi_packet.timestamp = esp_timer_get_time();
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+
+    // Get timestamp
+    csi_packet.timestamp = ((int64_t)tv.tv_sec * 1000000LL) + (int64_t)tv.tv_usec;
 
     csi_packet.channel = csi_info->rx_ctrl.channel;
     csi_packet.rssi = csi_info->rx_ctrl.rssi;
