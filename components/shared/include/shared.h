@@ -27,22 +27,21 @@ typedef struct {
     uint8_t csi_data[CSI_DATA_LEN];
 } csi_packet_t;
 
-// File header for L2 capture file
+// File header for capture file
 typedef struct {
-    char identifier[4]; // e.g., "L2PK"
-    uint32_t version;   // e.g., 1
-    uint64_t start_time; // Unix timestamp when capture started
-} l2_file_header_t;
-
-// File header for CSI capture file
-typedef struct {
-    char identifier[4]; // e.g., "CSIP"
-    uint32_t version;   // e.g., 1
-    uint64_t start_time; // Unix timestamp when capture started
-} csi_file_header_t;
+    char identifier[4];   // e.g., "L2PK" or "CSIP"
+    uint32_t version;     // e.g., 1
+    uint64_t start_time;  // Unix timestamp when capture started
+    uint8_t wifi_mac[6];  // Wi-Fi MAC address
+    uint8_t bt_mac[6];    // Bluetooth MAC address
+} file_header_t;
 
 // Queue handles for L2 and CSI data
 extern QueueHandle_t l2_packet_queue;
 extern QueueHandle_t csi_packet_queue;
+
+// MAC addresses
+extern uint8_t wifi_mac[6];
+extern uint8_t bt_mac[6];
 
 #endif // SHARED_H

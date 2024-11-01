@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include <inttypes.h>
+#include <esp_wifi.h>
+#include <esp_mac.h>
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "esp_log.h"
-#include "shared.h"
 #include "bluetooth.h"
 #include "nvs_flash.h"
 #include "sniffer.h"
 #include "management.h"
+#include "shared.h"
 
 static const char* TAG = "MAIN_MODULE";
 
@@ -40,6 +42,25 @@ void app_main(void)
 
     if (!management_obtain_time()) {
         esp_restart();
+    }
+
+    rc = esp_wifi_get_mac(WIFI_IF_STA, wifi_mac);
+    if (rc == ESP_OK) {
+        ESP_LOGI(TAG, "Wi-Fi MAC address: %02X:%02X:%02X:%02X:%02X:%02X",
+                 wifi_mac[0], wifi_mac[1], wifi_mac[2],
+                 wifi_mac[3], wifi_mac[4], wifi_mac[5]);
+    } else {
+        ESP_LOGE(TAG, "Failed to get Wi-Fi MAC address: %s", esp_err_to_name(rc));
+    }
+
+    // Obtain Bluetooth MAC address
+    rc = esp_read_mac(bt_mac, ESP_MAC_BT);
+    if (rc == ESP_OK) {
+        ESP_LOGI(TAG, "Bluetooth MAC address: %02X:%02X:%02X:%02X:%02X:%02X",
+                 bt_mac[0], bt_mac[1], bt_mac[2],
+                 bt_mac[3], bt_mac[4], bt_mac[5]);
+    } else {
+        ESP_LOGE(TAG, "Failed to get Bluetooth MAC address: %s", esp_err_to_name(rc));
     }
 
     management_wifi_deinit();
