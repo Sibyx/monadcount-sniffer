@@ -7,3 +7,5 @@ QueueHandle_t csi_packet_queue = NULL;
 
 uint8_t wifi_mac[6];
 uint8_t bt_mac[6];
+
+sdmmc_card_t* card = NULL;

@@ -3,12 +3,16 @@
 #include <time.h>
 #include <esp_netif_sntp.h>
 #include <esp_mac.h>
+#include <sys/stat.h>
 #include "esp_wifi.h"
 #include "esp_eap_client.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "freertos/event_groups.h"
 #include "freertos/FreeRTOS.h"
+#include "driver/sdspi_host.h"
+#include "driver/spi_common.h"
+#include "esp_vfs_fat.h"
 
 #define MAX_RETRY      5
 
@@ -221,4 +225,72 @@ static void management_ip_event_handler(void *arg, esp_event_base_t event_base,
         s_retry_num = 0;
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
+}
+
+bool sdcard_init(void) {
+    esp_err_t ret;
+
+    // Filesystem mount config
+    esp_vfs_fat_sdmmc_mount_config_t mount_config = {
+            .format_if_mount_failed = false,
+            .max_files = 10,
+            .allocation_unit_size = 64 * 1024
+    };
+
+    sdmmc_host_t host = SDSPI_HOST_DEFAULT();
+    host.slot = SPI3_HOST;
+    host.max_freq_khz = 4000;
+
+    spi_bus_config_t bus_cfg = {
+            .mosi_io_num = CONFIG_SNIFFER_SDCARD_MOSI,
+            .miso_io_num = CONFIG_SNIFFER_SDCARD_MISO,
+            .sclk_io_num = CONFIG_SNIFFER_SDCARD_CLK,
+            .quadwp_io_num = -1,
+            .quadhd_io_num = -1,
+            .max_transfer_sz = 4000,
+    };
+
+    // Initialize the SPI bus
+    ret = spi_bus_initialize(host.slot, &bus_cfg, SDSPI_DEFAULT_DMA);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to initialize bus.");
+        return false;
+    }
+
+    // Configure SD card slot
+    sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
+    slot_config.gpio_cs = CONFIG_SNIFFER_SDCARD_CS;
+    slot_config.host_id = host.slot;
+
+    ret = esp_vfs_fat_sdspi_mount(MOUNT_POINT, &host, &slot_config, &mount_config, &card);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to mount filesystem: %s", esp_err_to_name(ret));
+        spi_bus_free(SDSPI_DEFAULT_HOST);
+        return false;
+    }
+
+    ESP_LOGI(TAG, "SD card mounted at %s", MOUNT_POINT);
+    sdmmc_card_print_info(stdout, card);
+
+    struct stat st;
+    if (stat(MOUNT_POINT, &st) == 0) {
+        ESP_LOGI(TAG, "Mount point %s exists", MOUNT_POINT);
+    } else {
+        ESP_LOGE(TAG, "Mount point %s does not exist", MOUNT_POINT);
+        return false;
+    }
+
+    return true;
+}
+
+
+bool sdcard_deinit(void) {
+    // Unmount SD card
+    esp_vfs_fat_sdcard_unmount(MOUNT_POINT, NULL);
+    ESP_LOGI(TAG, "SD card unmounted");
+
+    // Release SPI bus
+    spi_bus_free(SPI3_HOST);
+
+    return true;
 }

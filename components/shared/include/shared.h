@@ -1,9 +1,11 @@
 #ifndef SHARED_H
 #define SHARED_H
 
+#include <sdmmc_cmd.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 
+#define MOUNT_POINT "/sdcard"
 #define CSI_DATA_LEN 128 // Adjust based on your needs
 
 // Packet data structure
@@ -43,5 +45,8 @@ extern QueueHandle_t csi_packet_queue;
 // MAC addresses
 extern uint8_t wifi_mac[6];
 extern uint8_t bt_mac[6];
+
+// Storage
+extern sdmmc_card_t* card;
 
 #endif // SHARED_H

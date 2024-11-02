@@ -38,6 +38,11 @@ void app_main(void)
     ESP_LOGI(TAG, "Starting Management Phase");
     management_wifi_init();
 
+    // Management Phase: Mount SD Card
+    if (!sdcard_init()) {
+        esp_restart();
+    }
+
     // Sync time
     if (!management_obtain_time()) {
         esp_restart();
