@@ -50,14 +50,7 @@ static void wifi_promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type) 
     packet_data.timestamp = ((int64_t)tv.tv_sec * 1000000LL) + (int64_t)tv.tv_usec;
     packet_data.rssi = rx_ctrl->rssi;
     packet_data.channel = rx_ctrl->channel;
-
-    // Copy packet payload
-    uint16_t len = rx_ctrl->sig_len;
-    if (len > sizeof(packet_data.payload)) {
-        len = sizeof(packet_data.payload);
-    }
-    packet_data.payload_len = len;
-    memcpy(packet_data.payload, ppkt->payload, len);
+    packet_data.payload_len = rx_ctrl->sig_len;
 
     // Enqueue the packet data
     if (xQueueSendFromISR(l2_packet_queue, &packet_data, NULL) != pdTRUE) {

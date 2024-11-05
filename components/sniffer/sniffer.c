@@ -27,11 +27,15 @@ void sniffer_init(void) {
         return;
     }
 
+    #ifdef CONFIG_SNIFFER_ENABLE_L2
     // Initialize L2 sniffer
     l2_sniffer_init();
+    #endif
 
+    #ifdef CONFIG_SNIFFER_ENABLE_CSI
     // Initialize CSI sniffer
     csi_sniffer_init();
+    #endif
 
     // Start channel hopping task
     xTaskCreate(channel_hop_task, "channel_hop_task", 2048, NULL, 5, NULL);
@@ -62,7 +66,7 @@ void sniffer_deinit(void) {
 void channel_hop_task(void *pvParameter) {
     uint8_t channel = 1;
     while (1) {
-        vTaskDelay(pdMS_TO_TICKS(1000)); // Change channel every 1 second
+        vTaskDelay(pdMS_TO_TICKS(CONFIG_SNIFFER_CHANNEL_HOP_INTERVAL));
         channel = (channel % 13) + 1; // Loop from 1 to 13
         ESP_ERROR_CHECK(esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE));
     }

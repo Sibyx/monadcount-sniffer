@@ -28,21 +28,25 @@ static void fsync_timer_callback(TimerHandle_t xTimer) {
 
 bool sdcard_writer_init(void)
 {
-    // Create queues for L2 and CSI data
+    // L2 sniffer
+    #ifdef CONFIG_SNIFFER_ENABLE_L2
     l2_packet_queue = xQueueCreate(CONFIG_SNIFFER_PACKET_QUEUE_SIZE, sizeof(captured_packet_t));
     if (l2_packet_queue == NULL) {
         ESP_LOGE(TAG, "Failed to create L2 packet queue");
         return false;
     }
+    xTaskCreate(l2_writer_task, "l2_writer_task", 8192, NULL, 5, &l2_writer_task_handle);
+    #endif
+
+    // CSI Sniffer
+    #ifdef CONFIG_SNIFFER_ENABLE_CSI
     csi_packet_queue = xQueueCreate(CONFIG_SNIFFER_CSI_QUEUE_SIZE, sizeof(csi_packet_t));
     if (csi_packet_queue == NULL) {
         ESP_LOGE(TAG, "Failed to create CSI packet queue");
         return false;
     }
-
-    // Create writer tasks
-    xTaskCreate(l2_writer_task, "l2_writer_task", 8192, NULL, 5, &l2_writer_task_handle);
     xTaskCreate(csi_writer_task, "csi_writer_task", 8192, NULL, 5, &csi_writer_task_handle);
+    #endif
 
     return true;
 }

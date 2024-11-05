@@ -365,8 +365,12 @@ void upload_files_to_server(void) {
                 continue;
             }
 
-            size_t read_bytes = 0;
+            uint64_t total_uploaded = 0;
+            uint64_t read_bytes = 0;
             bool upload_failed = false;
+            int last_reported_percentage = -1;
+
+            ESP_LOGI(TAG, "Uploading: %s", filepath);
             while ((read_bytes = fread(buffer, 1, buffer_size, file)) > 0) {
                 int wlen = esp_http_client_write(client, (char *) buffer, read_bytes);
                 if (wlen < 0) {
@@ -374,7 +378,16 @@ void upload_files_to_server(void) {
                     upload_failed = true;
                     break;
                 }
+                total_uploaded += wlen;
+
+                // Calculate and display percentage (with casting to prevent overflow)
+                int percentage = (int)((total_uploaded * 100) / (uint64_t)st.st_size);
+                if (percentage != last_reported_percentage) {
+                    ESP_LOGI(TAG, "Progress (%s): %d%%", filepath, percentage);
+                    last_reported_percentage = percentage;
+                }
             }
+            ESP_LOGI(TAG, "Upload complete for %s", filepath);
 
             free(buffer);
             fclose(file);
@@ -408,13 +421,14 @@ void upload_files_to_server(void) {
 }
 
 
+
 void init_restart_timer(void) {
     TimerHandle_t restart_timer = xTimerCreate(
             "restart_timer",
-            pdMS_TO_TICKS(3600000),  // 3600000 ms = 1 hour
-            pdTRUE,                  // Auto-reload timer
-            NULL,                    // Timer ID (not used)
-            restart_timer_callback   // Callback function
+            pdMS_TO_TICKS(CONFIG_MANAGEMENT_REBOOT_INTERVAL * 60 * 1000),
+            pdTRUE,
+            NULL,
+            restart_timer_callback
     );
 
     if (restart_timer == NULL) {

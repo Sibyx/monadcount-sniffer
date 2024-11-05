@@ -16,7 +16,6 @@ typedef struct {
     int8_t rssi;
     uint8_t channel;
     uint16_t payload_len;
-    uint8_t payload[256]; // Adjust size as needed
 } captured_packet_t;
 
 // CSI packet data structure

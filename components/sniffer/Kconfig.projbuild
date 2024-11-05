@@ -1,4 +1,16 @@
 menu "Sniffer Configuration"
+    config SNIFFER_ENABLE_L2
+        bool "L2 Sniffer"
+        default y
+
+    config SNIFFER_ENABLE_CSI
+        bool "CSI Sniffer"
+        default y
+
+    config SNIFFER_CHANNEL_HOP_INTERVAL
+        int "Channel hop interval (ms)"
+        default 1000
+
     config SNIFFER_SDCARD_MISO
         int "SD Card MISO GPIO"
         default 12
