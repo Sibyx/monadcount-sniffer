@@ -53,6 +53,10 @@ void app_main(void)
         esp_restart();
     }
 
+    upload_files_to_server();
+
+    init_restart_timer();
+
     management_wifi_deinit();
 
     ESP_LOGI(TAG, "Starting Sniffer Phase");

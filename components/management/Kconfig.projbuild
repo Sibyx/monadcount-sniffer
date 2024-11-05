@@ -4,10 +4,18 @@ menu "Management Configuration"
         default "MonadCountManagement"
 
     config MANAGEMENT_WIFI_USERNAME
-        string "Management: WiFi Password"
+        string "Management: WiFi Username"
         default "arthut.dent@example.sk"
 
     config MANAGEMENT_WIFI_PASSWORD
         string "Management: WiFi Password"
         default "DontPanic!42"
+
+    config MANAGEMENT_SERVER_URL
+        string "Management: Server URL"
+        default "http://monad.vogsphere.sk"
+
+    config MANAGEMENT_SERVER_BASIC_AUTH
+        string "Management: HTTP Basic Auth value (jdubec:DontPanic!42)"
+        default "amR1YmVjOkRvbnRQYW5pYyE0Mg=="
 endmenu

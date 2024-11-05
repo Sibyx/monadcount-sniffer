@@ -14,3 +14,5 @@ bool sdcard_deinit(void);
 // Helpers
 bool management_obtain_time(void);
 bool management_obtain_mac_addresses(void);
+void upload_files_to_server(void);
+void init_restart_timer(void);

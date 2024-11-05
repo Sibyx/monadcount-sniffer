@@ -13,6 +13,7 @@
 #include "driver/sdspi_host.h"
 #include "driver/spi_common.h"
 #include "esp_vfs_fat.h"
+#include "esp_http_client.h"
 
 #define MAX_RETRY      5
 
@@ -34,6 +35,10 @@ static void management_wifi_event_handler(void *arg, esp_event_base_t event_base
                                           int32_t event_id, void *event_data);
 static void management_ip_event_handler(void *arg, esp_event_base_t event_base,
                                         int32_t event_id, void *event_data);
+
+static void restart_timer_callback(TimerHandle_t xTimer) {
+    esp_restart();
+}
 
 void management_wifi_init(void)
 {
@@ -293,4 +298,134 @@ bool sdcard_deinit(void) {
     spi_bus_free(SPI3_HOST);
 
     return true;
+}
+
+void upload_files_to_server(void) {
+    // Obtain MAC address (Device ID)
+    char device_id[18];
+    snprintf(device_id, sizeof(device_id), "%02X:%02X:%02X:%02X:%02X:%02X",
+             wifi_mac[0], wifi_mac[1], wifi_mac[2],
+             wifi_mac[3], wifi_mac[4], wifi_mac[5]);
+
+    // Prepare the 'Authorization' header value
+    char auth_header_value[128];
+    snprintf(auth_header_value, sizeof(auth_header_value), "Basic %s", CONFIG_MANAGEMENT_SERVER_BASIC_AUTH);
+
+    // Define files to upload
+    const char *files_to_upload[] = {"/sdcard/l2.bin", "/sdcard/csi.bin"};
+    const char *file_types[] = {"l2", "csi"};
+
+    for (int i = 0; i < 2; i++) {
+        const char *filepath = files_to_upload[i];
+        const char *file_type = file_types[i];
+
+        struct stat st;
+        if (stat(filepath, &st) == 0) {
+            ESP_LOGI(TAG, "File %s exists, size: %ld bytes", filepath, st.st_size);
+
+            // Open file
+            FILE *file = fopen(filepath, "rb");
+            if (file == NULL) {
+                ESP_LOGE(TAG, "Failed to open file %s", filepath);
+                continue;
+            }
+
+            // Configure HTTP client
+            esp_http_client_config_t config = {
+                    .url = CONFIG_MANAGEMENT_SERVER_URL,
+                    .method = HTTP_METHOD_POST,
+                    .transport_type = HTTP_TRANSPORT_OVER_TCP,
+                    .timeout_ms = 600000
+            };
+
+            esp_http_client_handle_t client = esp_http_client_init(&config);
+
+            // Set HTTP headers
+            esp_http_client_set_header(client, "Content-Type", "application/octet-stream");
+            esp_http_client_set_header(client, "Device-ID", device_id);
+            esp_http_client_set_header(client, "File-Type", file_type);
+            esp_http_client_set_header(client, "Authorization", auth_header_value);
+
+            // Start HTTP connection and write headers
+            esp_err_t err = esp_http_client_open(client, st.st_size);
+            if (err != ESP_OK) {
+                ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
+                esp_http_client_cleanup(client);
+                fclose(file);
+                continue;
+            }
+
+            // Read from file and write to HTTP client
+            size_t buffer_size = 1024 * 50;  // Adjust as needed
+            uint8_t *buffer = malloc(buffer_size);
+            if (buffer == NULL) {
+                ESP_LOGE(TAG, "Failed to allocate buffer");
+                esp_http_client_cleanup(client);
+                fclose(file);
+                continue;
+            }
+
+            size_t read_bytes = 0;
+            bool upload_failed = false;
+            while ((read_bytes = fread(buffer, 1, buffer_size, file)) > 0) {
+                int wlen = esp_http_client_write(client, (char *) buffer, read_bytes);
+                if (wlen < 0) {
+                    ESP_LOGE(TAG, "Error writing data to HTTP stream");
+                    upload_failed = true;
+                    break;
+                }
+            }
+
+            free(buffer);
+            fclose(file);
+
+            if (!upload_failed) {
+                // Finish the HTTP request
+                esp_http_client_fetch_headers(client);
+                int status = esp_http_client_get_status_code(client);
+                if (status == 200) {
+                    ESP_LOGI(TAG, "File %s uploaded successfully", filepath);
+
+                    // Delete the file after successful upload
+                    if (unlink(filepath) == 0) {
+                        ESP_LOGI(TAG, "File %s deleted after upload", filepath);
+                    } else {
+                        ESP_LOGE(TAG, "Failed to delete file %s", filepath);
+                    }
+                } else {
+                    ESP_LOGE(TAG, "Failed to upload file %s, HTTP status code: %d", filepath, status);
+                }
+            } else {
+                ESP_LOGW(TAG, "Upload failed for file %s. Will retry later.", filepath);
+            }
+
+            esp_http_client_close(client);
+            esp_http_client_cleanup(client);
+        } else {
+            ESP_LOGI(TAG, "File %s does not exist", filepath);
+        }
+    }
+}
+
+
+void init_restart_timer(void) {
+    TimerHandle_t restart_timer = xTimerCreate(
+            "restart_timer",
+            pdMS_TO_TICKS(3600000),  // 3600000 ms = 1 hour
+            pdTRUE,                  // Auto-reload timer
+            NULL,                    // Timer ID (not used)
+            restart_timer_callback   // Callback function
+    );
+
+    if (restart_timer == NULL) {
+        ESP_LOGE(TAG, "Failed to create restart timer");
+        return;
+    }
+
+    // Start the timer
+    if (xTimerStart(restart_timer, 0) != pdPASS) {
+        ESP_LOGE(TAG, "Failed to start restart timer");
+    } else {
+        ESP_LOGI(TAG, "Restart timer initialized to trigger every 1 hour.");
+    }
 }
