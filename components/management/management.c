@@ -440,6 +440,6 @@ void init_restart_timer(void) {
     if (xTimerStart(restart_timer, 0) != pdPASS) {
         ESP_LOGE(TAG, "Failed to start restart timer");
     } else {
-        ESP_LOGI(TAG, "Restart timer initialized to trigger every 1 hour.");
+        ESP_LOGI(TAG, "Restart timer initialized to trigger every %d minutes.", CONFIG_MANAGEMENT_REBOOT_INTERVAL);
     }
 }

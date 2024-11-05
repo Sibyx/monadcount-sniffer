@@ -51,13 +51,7 @@ static void wifi_csi_rx_cb(void *ctx, wifi_csi_info_t *csi_info) {
     // Minimal processing in the callback
     csi_packet_t csi_packet;
 
-    // Get timestamp
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-
-    // Get timestamp
-    csi_packet.timestamp = ((int64_t)tv.tv_sec * 1000000LL) + (int64_t)tv.tv_usec;
-
+    csi_packet.timestamp = time(NULL);
     csi_packet.channel = csi_info->rx_ctrl.channel;
     csi_packet.rssi = csi_info->rx_ctrl.rssi;
     memcpy(csi_packet.mac, csi_info->mac, 6);

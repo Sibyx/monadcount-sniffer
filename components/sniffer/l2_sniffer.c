@@ -41,13 +41,9 @@ static void wifi_promiscuous_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type) 
     const wifi_promiscuous_pkt_t *ppkt = (wifi_promiscuous_pkt_t *)buf;
     const wifi_pkt_rx_ctrl_t *rx_ctrl = &ppkt->rx_ctrl;
 
-    // Get timestamp
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-
     // Prepare captured packet data
     captured_packet_t packet_data;
-    packet_data.timestamp = ((int64_t)tv.tv_sec * 1000000LL) + (int64_t)tv.tv_usec;
+    packet_data.timestamp = time(NULL);
     packet_data.rssi = rx_ctrl->rssi;
     packet_data.channel = rx_ctrl->channel;
     packet_data.payload_len = rx_ctrl->sig_len;

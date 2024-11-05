@@ -9,8 +9,8 @@
 #define CSI_DATA_LEN 128 // Adjust based on your needs
 
 // Packet data structure
-typedef struct {
-    int64_t timestamp;
+typedef struct __attribute__((packed)) {
+    uint64_t timestamp;
     uint8_t src_mac[6];
     uint8_t dst_mac[6];
     int8_t rssi;
@@ -19,8 +19,8 @@ typedef struct {
 } captured_packet_t;
 
 // CSI packet data structure
-typedef struct {
-    int64_t timestamp;
+typedef struct __attribute__((packed)) {
+    uint64_t timestamp;
     uint8_t mac[6];
     int8_t rssi;
     uint8_t channel;
@@ -29,7 +29,7 @@ typedef struct {
 } csi_packet_t;
 
 // File header for capture file
-typedef struct {
+typedef struct __attribute__((packed)) {
     char identifier[4];   // e.g., "L2PK" or "CSIP"
     uint32_t version;     // e.g., 1
     uint64_t start_time;  // Unix timestamp when capture started
