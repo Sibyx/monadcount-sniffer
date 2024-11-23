@@ -102,7 +102,7 @@ static void l2_writer_task(void *pvParameter)
         // Prepare and write the file header
         file_header_t header;
         memcpy(header.identifier, "L2PK", 4);
-        header.version = 1;
+        header.version = 2;
         header.start_time = time(NULL);
         memcpy(header.wifi_mac, wifi_mac, 6);
         memcpy(header.bt_mac, bt_mac, 6);

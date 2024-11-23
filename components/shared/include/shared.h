@@ -4,6 +4,7 @@
 #include <sdmmc_cmd.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "esp_wifi.h"
 
 #define MOUNT_POINT "/sdcard"
 #define CSI_DATA_LEN 128 // Adjust based on your needs
@@ -11,11 +12,14 @@
 // Packet data structure
 typedef struct __attribute__((packed)) {
     uint64_t timestamp;
-    uint8_t src_mac[6];
-    uint8_t dst_mac[6];
+    uint8_t frame_type;  // Main frame type (0 = MGMT, 1 = CTRL, 2 = DATA)
+    uint8_t frame_subtype;
     int8_t rssi;
     uint8_t channel;
+    uint16_t header_len;
+    uint8_t header[36];
     uint16_t payload_len;
+    uint8_t payload[128];
 } captured_packet_t;
 
 // CSI packet data structure
@@ -47,5 +51,8 @@ extern uint8_t bt_mac[6];
 
 // Storage
 extern sdmmc_card_t* card;
+
+// Helpers
+uint64_t get_wall_clock_time();
 
 #endif // SHARED_H
